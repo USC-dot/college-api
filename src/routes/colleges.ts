@@ -1,10 +1,19 @@
 import { Router } from 'express';
 import { pool } from '../index';
 
+import { validate } from '../middleware/validate';
+import { 
+  searchValidator, 
+  idValidator, 
+  questionValidator, 
+  answerValidator,
+  predictorValidator 
+} from '../validators/collegeValidators';
+
 const router = Router();
 
 // 1️⃣ GET all colleges
-router.get('/', async (req, res) => {
+router.get('/', searchValidator, validate, async (req, res) => {
   try {
     const { search, state, type, fees_max } = req.query;
     let query = `SELECT * FROM colleges WHERE 1=1`;
@@ -24,7 +33,7 @@ router.get('/', async (req, res) => {
 });
 
 // 2️⃣ Predictor (BEFORE /:id)
-router.get('/predictor/results', async (req, res) => {
+router.get('/predictor/results', predictorValidator, validate, async (req, res) => {
   try {
     const { exam, rank } = req.query;
     let query = `SELECT * FROM colleges WHERE 1=1`;
@@ -52,7 +61,7 @@ router.get('/predictor/results', async (req, res) => {
 });
 
 // 3️⃣ Get questions (BEFORE /:id)
-router.get('/:id/questions', async (req, res) => {
+router.get('/:id/questions', idValidator, validate, async (req, res) => {
   try {
     const { id } = req.params;
     const questions = await pool.query(
@@ -74,7 +83,7 @@ router.get('/:id/questions', async (req, res) => {
 });
 
 // 4️⃣ Post a question (BEFORE /:id)
-router.post('/:id/questions', async (req, res) => {
+router.post('/:id/questions', [...idValidator, ...questionValidator], validate, async (req, res) => {
   try {
     const { id } = req.params;
     const { user_name, question } = req.body;
@@ -90,7 +99,7 @@ router.post('/:id/questions', async (req, res) => {
 });
 
 // 5️⃣ Post an answer
-router.post('/questions/:questionId/answers', async (req, res) => {
+router.post('/questions/:questionId/answers', answerValidator, validate, async (req, res) => {
   try {
     const { questionId } = req.params;
     const { user_name, answer } = req.body;
@@ -106,7 +115,7 @@ router.post('/questions/:questionId/answers', async (req, res) => {
 });
 
 // 6️⃣ GET single college by ID (ALWAYS LAST)
-router.get('/:id', async (req, res) => {
+router.get('/:id', idValidator, validate, async (req, res) => {
   try {
     const { id } = req.params;
     const college = await pool.query(`SELECT * FROM colleges WHERE id = $1`, [id]);

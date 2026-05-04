@@ -2,12 +2,14 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../index';
+import { validate } from '../middleware/validate';
+import { registerValidator, loginValidator } from '../validators/authValidators';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'college_secret_key';
 
 // Register
-router.post('/register', async (req, res) => {
+router.post('/register', registerValidator, validate, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -39,7 +41,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', loginValidator, validate, async (req, res) => {
   try {
     const { email, password } = req.body;
 
